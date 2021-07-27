@@ -1,5 +1,5 @@
 /*
-Copyright 2019 Replicated, Inc.
+Copyright 2019 The SchemaHero Authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -39,6 +39,11 @@ type DatabaseSpec struct {
 	EnableShellCommand bool               `json:"enableShellCommand,omitempty"`
 	ImmediateDeploy    bool               `json:"immediateDeploy,omitempty"`
 	SchemaHero         *SchemaHero        `json:"schemahero,omitempty"`
+	Template           *DatabaseTemplate  `json:"template,omitempty"`
+}
+
+type DatabaseTemplate struct {
+	metav1.ObjectMeta `json:"metadata,omitempty"`
 }
 
 // DatabaseStatus defines the observed state of Database

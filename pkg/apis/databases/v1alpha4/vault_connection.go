@@ -1,5 +1,5 @@
 /*
-Copyright 2019 Replicated, Inc.
+Copyright 2019 The SchemaHero Authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -143,7 +143,9 @@ func (d *Database) getVaultConnection(ctx context.Context, clientset kubernetes.
 	}
 
 	uriTemplate, err := getConnectionURITemplate(valueOrValueFrom.ValueFrom.Vault, loginResponse.Auth.ClientToken, d.Name)
-
+	if err != nil {
+		return "", "", errors.Wrap(err, "failed to get connection URI Template")
+	}
 	funcMap := template.FuncMap{}
 	funcMap["username"] = func() string {
 		return credsResponse.Data["username"].(string)

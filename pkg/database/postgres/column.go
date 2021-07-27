@@ -9,6 +9,7 @@ import (
 	"github.com/schemahero/schemahero/pkg/database/types"
 )
 
+// schemaColumnToColumn converts the requested type from the v1alpha4 schema to a postgres schema type
 func schemaColumnToColumn(schemaColumn *schemasv1alpha4.PostgresqlTableColumn) (*types.Column, error) {
 	column := &types.Column{
 		Name:          schemaColumn.Name,
@@ -76,7 +77,7 @@ func columnAsInsert(column *schemasv1alpha4.PostgresqlTableColumn) (string, erro
 	formatted := fmt.Sprintf("%s %s%s", pgx.Identifier{column.Name}.Sanitize(), postgresColumn.DataType, arraySpecifier)
 
 	if postgresColumn.Constraints != nil && postgresColumn.Constraints.NotNull != nil {
-		if *postgresColumn.Constraints.NotNull == true {
+		if *postgresColumn.Constraints.NotNull {
 			formatted = fmt.Sprintf("%s not null", formatted)
 		} else {
 			formatted = fmt.Sprintf("%s null", formatted)

@@ -20,19 +20,19 @@ func AlterColumnStatements(tableName string, primaryKeys []string, desiredColumn
 				return nil, err
 			}
 
-			if columnsMatch(existingColumn, column) {
+			if columnsMatch(*existingColumn, *column) {
 				return []string{}, nil
 			}
 
 			// If the request is to modify a column to add a not null contraint to an existing column
 			// handle that part here
-			if column.Constraints != nil && column.Constraints.NotNull != nil && *column.Constraints.NotNull == true {
+			if column.Constraints != nil && column.Constraints.NotNull != nil && *column.Constraints.NotNull {
 				isAddingNotNull := false
 				if existingColumn.Constraints == nil {
 					isAddingNotNull = true
 				} else if existingColumn.Constraints.NotNull == nil {
 					isAddingNotNull = true
-				} else if *existingColumn.Constraints.NotNull == false {
+				} else if !*existingColumn.Constraints.NotNull {
 					isAddingNotNull = true
 				}
 
@@ -102,8 +102,8 @@ func AlterColumnStatements(tableName string, primaryKeys []string, desiredColumn
 				}
 
 				if !isPrimaryKey {
-					if existingColumn.Constraints != nil && existingColumn.Constraints.NotNull != nil && *existingColumn.Constraints.NotNull == true {
-						if column.Constraints == nil || column.Constraints.NotNull == nil || *column.Constraints.NotNull == false {
+					if existingColumn.Constraints != nil && existingColumn.Constraints.NotNull != nil && *existingColumn.Constraints.NotNull {
+						if column.Constraints == nil || column.Constraints.NotNull == nil || !*column.Constraints.NotNull {
 							changes = append(changes, fmt.Sprintf("%s drop not null", alterStatement))
 						}
 					}
@@ -122,7 +122,24 @@ func AlterColumnStatements(tableName string, primaryKeys []string, desiredColumn
 	return []string{fmt.Sprintf(`alter table %s drop column %s`, pgx.Identifier{tableName}.Sanitize(), pgx.Identifier{existingColumn.Name}.Sanitize())}, nil
 }
 
-func columnsMatch(col1 *types.Column, col2 *types.Column) bool {
+func columnsMatch(col1 types.Column, col2 types.Column) bool {
+	// for time and timestamp comparisons, we know that postgres
+	// defaults to without time zone, so let's normalize a case
+	// where someone is relying on the default and specifying it
+	if col1.DataType == "timestamp" {
+		col1.DataType = "timestamp without time zone"
+	}
+	if col2.DataType == "timestamp" {
+		col2.DataType = "timestamp without time zone"
+	}
+
+	if col1.DataType == "time" {
+		col1.DataType = "time without time zone"
+	}
+	if col2.DataType == "time" {
+		col2.DataType = "time without time zone"
+	}
+
 	if col1.DataType != col2.DataType {
 		return false
 	}
